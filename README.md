@@ -1,4 +1,3 @@
-# Data-Pipeline-Project
 # Financial Market ETL Pipeline (Python + Azure)
 
 This project is an end-to-end ETL pipeline that ingests daily stock market data from a public API, transforms it into an analytics-ready format, and loads it into Azure Blob Storage for downstream analytics.
