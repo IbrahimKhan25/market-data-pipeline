@@ -1,6 +1,6 @@
 # Market Data Lakehouse & Volatility Forecasting
 
-[![CI](https://github.com/IbrahimKhan25/Financial-Market-ETL-Pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/IbrahimKhan25/Financial-Market-ETL-Pipeline/actions/workflows/ci.yml)
+[![CI](https://github.com/IbrahimKhan25/market-data-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/IbrahimKhan25/market-data-pipeline/actions/workflows/ci.yml)
 
 An end-to-end data + ML platform built on daily equity market data. It ingests prices
 incrementally, checks them against data contracts, models them into a tested dbt/DuckDB
@@ -63,8 +63,8 @@ flowchart LR
     FV --> PUB[Publish] --> AZ[(Azure Blob / ADLS Gen2<br/>snapshot + latest)]
 ```
 
-Orchestration: Prefect flows (daily run after the US close plus a Saturday retrain),
-the same steps as a GitHub Actions schedule, or just `market-pipeline run`.
+Orchestration: Prefect flows (a daily run and a weekly retrain, served locally), a
+manually triggered GitHub Actions workflow, or just `market-pipeline run`.
 
 ## Quickstart
 
@@ -176,7 +176,7 @@ uniqueness, and dates not in the future. Failures are handled in two ways:
 |---|---|
 | Testing | 40 pytest tests (83% coverage) plus 19 dbt data tests. The full lakehouse is built once per session from the simulator, so CI never touches the network |
 | CI/CD | GitHub Actions: ruff, format check, mypy with pandas-stubs, `dbt parse`, pytest with an Azurite service container, Docker build |
-| Scheduling | `pipeline.yml` (weekday runs, Saturday retrain, monitoring gate, report artifacts), or Prefect deployments |
+| Orchestration | `pipeline.yml` (on-demand run with optional retrain, monitoring gate, report artifacts), or Prefect deployments |
 | Config | Typed pydantic-settings: YAML, overridden by `MP_*` env vars (e.g. `MP_ML__HORIZON_DAYS=10`). Secrets are `SecretStr` |
 | Packaging | uv lockfile, non-root Docker image with cached dependency layers, `docker compose` stack |
 

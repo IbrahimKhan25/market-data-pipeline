@@ -1,11 +1,9 @@
-name: Daily pipeline
+name: Pipeline
 
-# Scheduled production run: pulls real market data, rebuilds the warehouse,
-# retrains weekly (Saturdays), scores, monitors and publishes gold tables to Azure.
+# Manually triggered production run: pulls real market data, rebuilds the warehouse,
+# optionally retrains, scores, monitors and publishes gold tables to Azure.
+# To run on a schedule, add a `schedule:` trigger (e.g. cron "30 22 * * 1-5").
 on:
-  schedule:
-    - cron: "30 22 * * 1-5"   # weekdays after the US close
-    - cron: "0 6 * * 6"       # Saturday: full retrain
   workflow_dispatch:
     inputs:
       retrain:
@@ -39,7 +37,7 @@ jobs:
       - name: Run pipeline
         run: |
           RETRAIN="--no-retrain"
-          if [ "${{ github.event.schedule }}" = "0 6 * * 6" ] || [ "${{ inputs.retrain }}" = "true" ]; then RETRAIN="--retrain"; fi
+          if [ "${{ inputs.retrain }}" = "true" ]; then RETRAIN="--retrain"; fi
           PUBLISH="--no-publish"
           if [ -n "$AZURE_STORAGE_CONNECTION_STRING" ]; then PUBLISH="--publish"; fi
           uv run market-pipeline run $RETRAIN $PUBLISH
