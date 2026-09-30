@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: fct_daily_returns
+    description: Daily bars enriched with log/simple returns, intraday range and overnight gap.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [ticker, date]
+    columns:
+      - name: log_return
+        description: ln(adj_close_t / adj_close_{t-1}); NULL on each ticker's first row.
+        data_tests:
+          - in_range:
+              arguments:
+                min_value: -1.5
+                max_value: 1.5
+      - name: log_range
+        data_tests:
+          - in_range:
+              arguments:
+                min_value: 0
+
+  - name: features_volatility
+    description: >
+      One row per (ticker, date) with backward-looking volatility features and the
+      forward realised-volatility target (annualised). Rows with is_labeled = false are
+      the scoring set.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [ticker, date]
+    columns:
+      - name: rv_5d
+        description: Annualised close-to-close realised vol, trailing 5 sessions.
+        data_tests:
+          - not_null
+          - in_range:
+              arguments:
+                min_value: 0
+                max_value: 10
+      - name: rv_21d
+        data_tests: [not_null]
+      - name: rv_63d
+        data_tests: [not_null]
+      - name: parkinson_21d
+        description: Parkinson (high-low) range volatility estimator, trailing 21 sessions.
+        data_tests: [not_null]
+      - name: target_rv_fwd
+        description: Annualised realised vol over the next `forecast_horizon` sessions. NULL when not yet observable.
+        data_tests:
+          - in_range:
+              arguments:
+                min_value: 0
+                max_value: 10
+      - name: is_labeled
+        data_tests: [not_null]
+
+  - name: agg_ticker_monthly
+    description: Monthly return, realised vol and activity per ticker.
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [ticker, month]
