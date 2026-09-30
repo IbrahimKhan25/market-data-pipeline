@@ -1,0 +1,24 @@
+name: market_pipeline
+version: "1.0.0"
+config-version: 2
+profile: market_pipeline
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: target
+clean-targets: ["target", "dbt_packages", "logs"]
+
+vars:
+  forecast_horizon: 5      # trading days ahead for the volatility target
+  min_history: 63          # rows of history needed before a feature row is emitted
+  trading_days: 252
+
+models:
+  market_pipeline:
+    staging:
+      +schema: staging
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table

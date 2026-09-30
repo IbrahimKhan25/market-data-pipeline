@@ -1,0 +1,60 @@
+# Full local stack:
+#   docker compose up --build
+# pipeline runs once (ingest -> dbt -> train -> predict -> monitor -> publish to Azurite),
+# then the API (http://localhost:8000/docs) and MLflow UI (http://localhost:5000) start.
+
+x-app: &app
+  build: .
+  image: market-pipeline:latest
+  environment: &env
+    MP_SOURCE: ${MP_SOURCE:-yahoo}
+    MP_ML__MLFLOW_TRACKING_URI: sqlite:////app/state/mlflow.db
+    # Azurite's well-known development account; it isn't a secret.
+    AZURE_STORAGE_CONNECTION_STRING: >-
+      DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+  volumes:
+    - lake:/app/data
+    - models:/app/models
+    - state:/app/state
+    - mlruns:/app/mlruns
+    - reports:/app/reports
+
+services:
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    command: azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck --loose
+    ports: ["10000:10000"]
+
+  pipeline:
+    <<: *app
+    command: ["run", "--publish"]
+    depends_on: [azurite]
+
+  api:
+    <<: *app
+    command: ["serve", "--port", "8000"]
+    ports: ["8000:8000"]
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      retries: 3
+
+  mlflow:
+    <<: *app
+    entrypoint: ["mlflow", "server", "--backend-store-uri", "sqlite:////app/state/mlflow.db",
+                 "--host", "0.0.0.0", "--port", "5000"]
+    command: []
+    ports: ["5000:5000"]
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully
+
+volumes:
+  lake:
+  models:
+  state:
+  mlruns:
+  reports:
