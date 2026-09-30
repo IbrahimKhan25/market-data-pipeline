@@ -1,5 +1,7 @@
 # Market Data Lakehouse & Volatility Forecasting
 
+[![CI](https://github.com/IbrahimKhan25/Financial-Market-ETL-Pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/IbrahimKhan25/Financial-Market-ETL-Pipeline/actions/workflows/ci.yml)
+
 An end-to-end data + ML platform built on daily equity market data. It ingests prices
 incrementally, checks them against data contracts, models them into a tested dbt/DuckDB
 warehouse, and trains and gates a volatility-forecasting model tracked in MLflow. The
