@@ -58,6 +58,11 @@ def run_dbt(settings: Settings, args: list[str] | None = None) -> None:
         raise TransformError(
             f"dbt {' '.join(args)} failed:\n{proc.stdout[-3000:]}{proc.stderr[-2000:]}"
         )
+    if args[0] in ("build", "run") and not settings.paths.warehouse.exists():
+        raise TransformError(
+            f"dbt {' '.join(args)} exited 0 but {settings.paths.warehouse} was not created:\n"
+            f"{proc.stdout[-3000:]}{proc.stderr[-2000:]}"
+        )
 
 
 @contextmanager
