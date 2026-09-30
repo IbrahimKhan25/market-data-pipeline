@@ -12,16 +12,17 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    services:
-      azurite:
-        image: mcr.microsoft.com/azure-storage/azurite:latest
-        ports: ["10000:10000"]
-        options: --entrypoint azurite-blob
     env:
       MLFLOW_DISABLE_AGENT_HINT: "1"
       AZURITE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
     steps:
       - uses: actions/checkout@v4
+      # Started by hand: service containers can't pass the --blobHost flag Azurite needs.
+      - name: Start Azurite
+        run: |
+          docker run -d --name azurite -p 10000:10000 mcr.microsoft.com/azure-storage/azurite:latest \
+            azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck --loose
+          timeout 60 bash -c 'until curl -s -o /dev/null http://127.0.0.1:10000; do sleep 1; done'
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
