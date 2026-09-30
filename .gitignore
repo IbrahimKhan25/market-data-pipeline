@@ -10,19 +10,19 @@ htmlcov/
 *.egg-info/
 
 # Pipeline outputs
-data/
-demo/
-models/
-reports/
-mlflow.db
-mlruns/
-mlartifacts/
+/data/
+/demo/
+/models/
+/reports/
+/mlflow.db
+/mlruns/
+/mlartifacts/
 
 # dbt
 dbt/target/
 dbt/logs/
 dbt/dbt_packages/
-logs/
+/logs/
 
 # Terraform
 infra/**/.terraform/
@@ -33,7 +33,7 @@ infra/**/*.tfvars
 # Misc
 .env
 .DS_Store
-_legacy/
+/_legacy/
 
 # dbt per-user anonymous id
 dbt/.user.yml

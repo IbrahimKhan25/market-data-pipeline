@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: stg_prices
+    description: Deduplicated, typed daily bars — latest ingest per (ticker, date).
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: [ticker, date]
+    columns:
+      - name: ticker
+        data_tests: [not_null]
+      - name: date
+        data_tests: [not_null]
+      - name: adj_close
+        data_tests:
+          - not_null
+          - in_range:
+              arguments:
+                min_value: 0

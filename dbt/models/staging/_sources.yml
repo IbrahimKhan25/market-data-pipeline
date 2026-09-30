@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: bronze
+    description: Append-only Parquet landing zone written by `market_pipeline.ingest`.
+    config:
+      meta:
+        external_location: "read_parquet('{{ env_var('MP_DATA_DIR', '../data') }}/bronze/{name}/*/*.parquet', hive_partitioning = true, union_by_name = true)"
+      loaded_at_field: ingested_at
+      freshness:
+        warn_after: {count: 3, period: day}
+        error_after: {count: 7, period: day}
+    tables:
+      - name: prices
+        description: One row per (ticker, date) per ingest run, exactly as returned by the vendor, after contract validation.
