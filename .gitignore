@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Pipeline outputs
+data/
+demo/
+models/
+reports/
+mlflow.db
+mlruns/
+mlartifacts/
+
+# dbt
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+logs/
+
+# Terraform
+infra/**/.terraform/
+infra/**/*.tfstate*
+infra/**/*.tfvars
+!infra/**/example.tfvars
+
+# Misc
+.env
+.DS_Store
+_legacy/
+
+# dbt per-user anonymous id
+dbt/.user.yml

@@ -1,0 +1,7 @@
+market_pipeline:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('MP_WAREHOUSE_PATH', '../data/warehouse.duckdb') }}"
+      threads: 4

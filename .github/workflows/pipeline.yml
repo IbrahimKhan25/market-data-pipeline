@@ -1,0 +1,55 @@
+name: Daily pipeline
+
+# Scheduled production run: pulls real market data, rebuilds the warehouse,
+# retrains weekly (Saturdays), scores, monitors and publishes gold tables to Azure.
+on:
+  schedule:
+    - cron: "30 22 * * 1-5"   # weekdays after the US close
+    - cron: "0 6 * * 6"       # Saturday: full retrain
+  workflow_dispatch:
+    inputs:
+      retrain:
+        description: Retrain the model
+        type: boolean
+        default: true
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MLFLOW_DISABLE_AGENT_HINT: "1"
+      AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked --no-dev
+      - name: Restore lake + model state
+        uses: actions/cache@v4
+        with:
+          path: |
+            data
+            models
+            mlflow.db
+            mlruns
+          key: lake-${{ github.run_id }}
+          restore-keys: lake-
+      - name: Run pipeline
+        run: |
+          RETRAIN="--no-retrain"
+          if [ "${{ github.event.schedule }}" = "0 6 * * 6" ] || [ "${{ inputs.retrain }}" = "true" ]; then RETRAIN="--retrain"; fi
+          PUBLISH="--no-publish"
+          if [ -n "$AZURE_STORAGE_CONNECTION_STRING" ]; then PUBLISH="--publish"; fi
+          uv run market-pipeline run $RETRAIN $PUBLISH
+      - name: Monitoring gate
+        run: uv run market-pipeline monitor --fail-on-alert
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reports-${{ github.run_id }}
+          path: |
+            reports/
+            models/model_card.json
+            data/_runs/
